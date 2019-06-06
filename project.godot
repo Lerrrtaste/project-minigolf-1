@@ -16,7 +16,11 @@ _global_script_class_icons={
 [application]
 
 config/name="ProjectMinigolf"
-run/main_scene="res://menu.tscn"
+run/main_scene="res://game.tscn"
+
+[autoload]
+
+global="*res://global.gd"
 
 [display]
 

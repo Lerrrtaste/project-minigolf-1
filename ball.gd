@@ -10,10 +10,11 @@ var prev_speed:float = 0.0
 var speed:float = 0.0
 var direction:Vector2 = Vector2()
 var active:bool = false
-var player = null
+var player_id:int
 
 var preview_length:int = 0
 var preview_direction:Vector2 = Vector2()
+const preview_length_max:int = 150
 
 onready var level = get_node("../")
 onready var level_terrain = get_node("../Terrain")
@@ -60,7 +61,7 @@ func collision_handle(collision:KinematicCollision2D)->void:
 		var tm_pos:Vector2 = level_terrain.world_to_map(collision.position)
 		tm_pos += direction.normalized()*0.1
 		if(level_terrain.tile_set.tile_get_name(level_terrain.get_cellv(tm_pos)) == "wall"): #check for wall collision
-			print("Colliding with wall")
+			print(self, "collided with wall")
 			#determine side
 			var delta:Vector2
 			delta.x = position.x - collision.position.x
@@ -75,22 +76,22 @@ func collision_handle(collision:KinematicCollision2D)->void:
 func shoot(mouse_pos:Vector2)->Object:
 	assert(active)
 	active = false
-	speed = clamp(position.distance_to(mouse_pos),0,100) * (speed_max/100)
+	speed = clamp(position.distance_to(mouse_pos),0,preview_length_max) * (speed_max/preview_length_max)
 	direction = position.direction_to(mouse_pos)
-	print("shot ball with vel: ", speed*direction)
+	print("shot ",self," with vel: ", speed*direction)
 	return self
 
 #Called when mouse moved (+ player's turn)
 #Updates the aim line var's and call's for redraw
 #Call with Vector2() as param to hide
 func update_preview(mouse_pos:Vector2)->void:
-	preview_length = clamp(position.distance_to(mouse_pos),0,100) if active else 0
+	preview_length = clamp(position.distance_to(mouse_pos),0,preview_length_max) if active else 0
 	preview_direction = position.direction_to(mouse_pos)
 	update()
 
 func _draw() -> void:
 	draw_line(Vector2(),preview_direction*preview_length,ColorN("red"))
-	draw_string(font,Vector2(0,-16),player.nick)
+	draw_string(font,Vector2(0,-16),global.game.player_get(player_id).nick)
 
 func point_in_rect(point:Vector2, rect:Rect2)->bool:
 	return (point.x >= rect.position.x &&point.y >= rect.position.y && point.x <= rect.position.x+rect.size.x && point.y <= rect.position.y+rect.size.y)

@@ -1,6 +1,6 @@
 extends Node
 
-var id := -1 #NOT USED YET
-var nick := "not set"
-var ball = null
-#maybe local:bool later
+var id:int
+var nick:String
+var ball:Node2D = null
+var playing:bool = false

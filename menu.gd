@@ -1,42 +1,55 @@
 extends Control
 
-onready var list = get_node("ListNames")
-onready var btn_remove = get_node("ListNames/ButtonRemove")
-onready var btn_add = get_node("ListNames/TextName/ButtonAdd")
+onready var list_players = get_node("ListPlayers")
+onready var list_maps = get_node("ListMaps")
+onready var btn_remove = get_node("ListPlayers/ButtonRemove")
+onready var btn_add = get_node("ListPlayers/TextName/ButtonAdd")
 onready var btn_play = get_node("ButtonPlay")
-onready var text = get_node("ListNames/TextName")
-
-const player_scn = preload("res://player.tscn")
+onready var text = get_node("ListPlayers/TextName")
 
 var selected_map_scn = preload("res://maps/map01.tscn") #hardcoded for debug
+var names_example = ["John","Chris","Player","Karen"]
+signal play(map) #destroys scene and starts map
 
 func _ready() -> void:
-	text.text = ["John","Chris","Player","Karen"][randi()%4]
+	for i in global.game.players:
+		list_players.add_item(i.nick)
+		list_players.set_item_metadata(list_players.get_item_count()-1,i.id)
+	
+	names_example.shuffle()
+	text.text = names_example.pop_front()
+	
 	btn_remove.connect("pressed",self,"_on_remove_pressed")
 	btn_add.connect("pressed",self,"_on_add_pressed")
 	btn_play.connect("pressed",self,"_on_play_pressed")
+	
+	update_maps()
+
+func update_maps()->void:
+	for i in global.maps:
+		list_maps.add_item(i)
+		list_maps.set_item_metadata(list_maps.get_item_count()-1, i)
 
 func _on_add_pressed()->void:
 	if(text.text == ""):
 		return
-	var inst = player_scn.instance()
-	inst.nick = text.text
-	list.add_item(text.text)
-	list.set_item_metadata(list.get_item_count()-1,inst)
+	var id = global.game.player_create(text.text)
+	if(id == -1):
+		return
+	list_players.add_item(text.text)
+	list_players.set_item_metadata(list_players.get_item_count()-1,id)
+	text.text = names_example.pop_front() if names_example.size()>0 else ""
+	
 
 func _on_remove_pressed()->void:
-	var idx = list.get_selected_items()[0]
-	var inst = list.get_item_metadata(idx)
-	inst.queue_free()
-	list.remove_item(idx)
+	if(list_players.get_selected_items().size() == 0):
+		return
+	var idx = list_players.get_selected_items()[0]
+	var id = list_players.get_item_metadata(idx)
+	global.game.player_remove(id)
+	list_players.remove_item(idx)
 
 func _on_play_pressed()->void:
-	if(list.get_item_count() == 0):
+	if(list_players.get_item_count() == 0 || list_maps.get_selected_items().size() == 0):
 		return
-	var inst = selected_map_scn.instance()
-	add_child(inst)
-	var players:Array
-	for i in list.get_item_count():
-		players.append(list.get_item_metadata(i))
-	inst.start_game(players)
-	#get_tree().change_scene_to(inst)
+	emit_signal("play",load(list_maps.get_item_metadata(list_maps.get_selected_items()[0])))
