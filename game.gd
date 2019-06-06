@@ -8,3 +8,8 @@ func _ready() -> void:
 func _on_hole_hit(body:PhysicsBody2D)->void:
 	body.visible = false
 	body.queue_free()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if(event is InputEventKey):
+		if(event.scancode == KEY_1 && event.pressed):
+			$Ball.active = true
