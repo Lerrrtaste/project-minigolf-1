@@ -1,13 +1,16 @@
 extends KinematicBody2D
 
 const hole_scn = preload("res://hole.tscn")
+const font = preload("res://assets/kenney_thick_dynfont.tres")
 
 const speed_max:float = 400.0
 const friction:float = 150.0
 
+var prev_speed:float = 0.0
 var speed:float = 0.0
 var direction:Vector2 = Vector2()
 var active:bool = false
+var player = null
 
 var preview_length:int = 0
 var preview_direction:Vector2 = Vector2()
@@ -15,6 +18,8 @@ var preview_direction:Vector2 = Vector2()
 onready var level = get_node("../")
 onready var level_terrain = get_node("../Terrain")
 onready var level_hole = get_node("../Hole")
+
+signal movement_finished
 
 enum COLLISION_TYPE {
 		NOTHING = -1,
@@ -41,6 +46,9 @@ func _physics_process(delta: float) -> void:
 #Called from process
 func move(delta:float)->void:
 	speed = clamp(speed - friction*delta,0,speed_max)
+	if(prev_speed > speed && speed <= 0):
+		emit_signal("movement_finished")
+	prev_speed = speed
 	collision_handle(move_and_collide(direction.normalized() * speed * delta))
 	#position += direction.normalized() * speed * delta
 
@@ -64,13 +72,13 @@ func collision_handle(collision:KinematicCollision2D)->void:
 
 #Called when clicked (+ player's turn)
 #Player shoots the ball
-func shoot(mouse_pos:Vector2)->void:
-	if(!active):
-		return
+func shoot(mouse_pos:Vector2)->Object:
+	assert(active)
 	active = false
 	speed = clamp(position.distance_to(mouse_pos),0,100) * (speed_max/100)
 	direction = position.direction_to(mouse_pos)
 	print("shot ball with vel: ", speed*direction)
+	return self
 
 #Called when mouse moved (+ player's turn)
 #Updates the aim line var's and call's for redraw
@@ -82,13 +90,7 @@ func update_preview(mouse_pos:Vector2)->void:
 
 func _draw() -> void:
 	draw_line(Vector2(),preview_direction*preview_length,ColorN("red"))
-
-func _input(event: InputEvent) -> void:
-	if(event is InputEventMouseButton):
-		if(event.button_index == BUTTON_LEFT && event.pressed):
-			shoot(event.position)
-	if(event is InputEventMouseMotion):
-			update_preview(event.position) #TODO only if its the balls player's turn
+	draw_string(font,Vector2(0,-16),player.nick)
 
 func point_in_rect(point:Vector2, rect:Rect2)->bool:
 	return (point.x >= rect.position.x &&point.y >= rect.position.y && point.x <= rect.position.x+rect.size.x && point.y <= rect.position.y+rect.size.y)
