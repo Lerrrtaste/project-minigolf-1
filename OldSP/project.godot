@@ -1,0 +1,36 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=4
+
+_global_script_classes=[  ]
+_global_script_class_icons={
+
+}
+
+[application]
+
+config/name="ProjectMinigolfClient"
+run/main_scene="res://game.tscn"
+
+[autoload]
+
+global="*res://global.gd"
+
+[display]
+
+window/size/width=800
+window/size/height=800
+
+[physics]
+
+2d/physics_engine="GodotPhysics"
+
+[rendering]
+
+environment/default_environment="res://default_env.tres"
